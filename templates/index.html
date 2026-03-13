@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAE Control Room</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: oklch(0.15 0 0);
+            --bg-secondary: oklch(0.18 0 0);
+            --bg-tertiary: oklch(0.22 0 0);
+            --text-primary: oklch(0.95 0.01 50);
+            --text-secondary: oklch(0.70 0.01 50);
+            --text-muted: oklch(0.50 0.01 50);
+            --accent-amber: oklch(0.65 0.15 70);
+            --accent-green: oklch(0.65 0.12 145);
+            --accent-red: oklch(0.60 0.18 25);
+            --accent-blue: oklch(0.60 0.12 240);
+            --border: oklch(0.25 0 0);
+            --border-subtle: oklch(0.20 0 0);
+
+            --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 0.75rem;
+            --space-lg: 1rem;
+            --space-xl: 1.5rem;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-display);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .offline-banner {
+            background: var(--accent-red);
+            color: var(--bg-primary);
+            padding: 6px var(--space-xl);
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-sm);
+            flex-shrink: 0;
+        }
+
+        .offline-banner.show { display: flex; }
+
+        .header {
+            background: var(--bg-secondary);
+            padding: var(--space-md) var(--space-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .header-left { display: flex; align-items: baseline; gap: var(--space-md); }
+        .header-title { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; }
+        .header-subtitle { font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-mono); }
+
+        .header-right { display: flex; align-items: center; gap: var(--space-md); }
+        .status-indicator { display: flex; align-items: center; gap: 4px; font-size: 0.65rem; font-family: var(--font-mono); color: var(--text-secondary); }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-green); animation: pulse 2s ease-in-out infinite; }
+        .status-dot.offline { background: var(--accent-red); animation: none; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .service-status { font-size: 0.65rem; font-family: var(--font-mono); padding: 2px 6px; border-radius: 2px; background: oklch(0.65 0.12 145 / 0.2); color: var(--accent-green); font-weight: 600; }
+        .service-status.offline { background: oklch(0.60 0.18 25 / 0.2); color: var(--accent-red); }
+
+        .content { display: grid; grid-template-columns: 320px 1fr; flex: 1; overflow: hidden; background: var(--border); gap: 1px; }
+
+        .sidebar { background: var(--bg-secondary); padding: var(--space-md); overflow-y: auto; }
+        .section-title { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: var(--space-sm); padding-bottom: var(--space-xs); border-bottom: 1px solid var(--border-subtle); }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-lg); }
+        .stat-box { background: var(--bg-tertiary); padding: var(--space-sm); border-radius: 3px; }
+        .stat-label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+        .stat-value { font-size: 1.25rem; font-weight: 700; font-family: var(--font-mono); color: var(--accent-amber); }
+        .stat-value.stale { color: var(--text-muted); }
+
+        .group-list { display: flex; flex-direction: column; gap: var(--space-xs); }
+        .group-item { background: var(--bg-tertiary); padding: var(--space-sm); border-radius: 3px; border-left: 2px solid var(--border); }
+        .group-item.active { border-left-color: var(--accent-green); }
+        .group-name { font-size: 0.7rem; font-weight: 600; margin-bottom: 2px; }
+        .group-detail { font-size: 0.65rem; font-family: var(--font-mono); color: var(--text-secondary); display: flex; align-items: center; gap: var(--space-sm); }
+        .group-latency { color: var(--accent-green); }
+        .group-latency.slow { color: var(--accent-amber); }
+        .group-latency.high { color: var(--accent-red); }
+
+        .main { background: var(--bg-primary); padding: var(--space-lg); overflow-y: auto; }
+
+        .tabs { display: flex; gap: var(--space-xs); margin-bottom: var(--space-md); border-bottom: 1px solid var(--border); padding-bottom: var(--space-xs); flex-wrap: wrap; }
+        .tab { padding: var(--space-xs) var(--space-sm); font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); background: transparent; border: none; cursor: pointer; border-radius: 3px; transition: all 0.15s; white-space: nowrap; }
+        .tab:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .tab.active { color: var(--text-primary); background: var(--bg-tertiary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .table-container { background: var(--bg-secondary); border-radius: 3px; overflow: hidden; }
+        .table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        .table thead { background: var(--bg-tertiary); }
+        .table th { padding: var(--space-xs) var(--space-sm); text-align: left; font-weight: 600; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+        .table td { padding: var(--space-xs) var(--space-sm); border-top: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.7rem; }
+        .table tr:hover { background: var(--bg-tertiary); }
+
+        .subtag-badge { display: inline-block; padding: 1px 4px; border-radius: 2px; font-size: 0.6rem; background: oklch(0.60 0.12 240 / 0.2); color: var(--accent-blue); }
+        .latency-good { color: var(--accent-green); }
+        .latency-slow { color: var(--accent-amber); }
+        .latency-bad { color: var(--accent-red); }
+
+        .log-viewer { background: var(--bg-secondary); border-radius: 3px; padding: var(--space-sm); font-family: var(--font-mono); font-size: 0.7rem; max-height: 450px; overflow-y: auto; }
+        .log-entry { padding: 2px 0; border-bottom: 1px solid var(--border-subtle); display: flex; gap: var(--space-sm); }
+        .log-time { color: var(--text-muted); min-width: 120px; font-size: 0.65rem; }
+        .log-level { min-width: 50px; font-size: 0.65rem; }
+        .log-level.info { color: var(--accent-blue); }
+        .log-level.warn { color: var(--accent-amber); }
+        .log-level.error { color: var(--accent-red); }
+        .log-message { color: var(--text-secondary); }
+
+        .empty { text-align: center; padding: var(--space-lg); color: var(--text-muted); font-size: 0.75rem; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border); }
+
+        @media (max-width: 1024px) {
+            .content { grid-template-columns: 1fr; }
+            .sidebar { max-height: 40vh; border-bottom: 1px solid var(--border); }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-banner" id="offlineBanner">
+        ⚠️ DAE 服务离线 - 日志数据未更新 (<span id="offlineAge">--</span>秒前)
+    </div>
+
+    <header class="header">
+        <div class="header-left">
+            <div class="header-title">DAE Control Room</div>
+            <div class="header-subtitle">192.168.203.80</div>
+        </div>
+        <div class="header-right">
+            <div class="service-status" id="serviceStatus">检查中...</div>
+            <div class="status-indicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">LIVE</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="content">
+        <aside class="sidebar">
+            <div class="section-title">系统概览</div>
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-box">
+                    <div class="stat-label">总节点</div>
+                    <div class="stat-value" id="totalNodes">--</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">分组</div>
+                    <div class="stat-value" id="groupCount">--</div>
+                </div>
+            </div>
+
+            <div class="section-title">分组状态</div>
+            <div class="group-list" id="groupList"></div>
+        </aside>
+
+        <main class="main">
+            <div class="tabs">
+                <button class="tab active" data-tab="groups">分组节点</button>
+                <button class="tab" data-tab="all-nodes">所有节点</button>
+                <button class="tab" data-tab="connections">连接记录</button>
+                <button class="tab" data-tab="dns">DNS解析</button>
+                <button class="tab" data-tab="logs">日志</button>
+            </div>
+
+            <div class="tab-content active" id="tab-groups">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>分组</th>
+                                <th>订阅来源</th>
+                                <th>选中节点</th>
+                                <th>延迟</th>
+                                <th>节点数</th>
+                            </tr>
+                        </thead>
+                        <tbody id="groupsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-all-nodes">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>节点名称</th>
+                                <th>订阅</th>
+                                <th>延迟</th>
+                                <th>所属分组</th>
+                            </tr>
+                        </thead>
+                        <tbody id="nodesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-connections">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>源地址</th>
+                                <th>目标地址</th>
+                                <th>节点</th>
+                                <th>出口</th>
+                                <th>网络</th>
+                            </tr>
+                        </thead>
+                        <tbody id="connectionsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-dns">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>域名</th>
+                                <th>DNS服务器</th>
+                                <th>网络</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dnsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-logs">
+                <div class="log-viewer" id="logViewer"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        let ws = null;
+        let isOffline = false;
+        let cachedGroups = {};
+        let cachedNodes = {};
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+                loadTabData(tab.dataset.tab);
+            });
+        });
+
+        async function loadTabData(tab) {
+            if (isOffline) return;
+            if (tab === 'groups') loadGroupsTable();
+            if (tab === 'all-nodes') loadNodesTable();
+            if (tab === 'connections') loadConnections();
+            if (tab === 'dns') loadDNS();
+            if (tab === 'logs') loadLogs();
+        }
+
+        async function checkServiceStatus() {
+            try {
+                const res = await fetch(API_BASE + '/api/status');
+                const data = await res.json();
+                isOffline = data.overall_status !== 'online';
+                updateStatusUI(isOffline, data.log_freshness?.age_seconds || 0);
+            } catch (e) {
+                isOffline = true;
+                updateStatusUI(true, 999);
+            }
+        }
+
+        function updateStatusUI(offline, logAge) {
+            const banner = document.getElementById('offlineBanner');
+            const statusEl = document.getElementById('serviceStatus');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            if (offline) {
+                banner.classList.add('show');
+                document.getElementById('offlineAge').textContent = logAge;
+                statusEl.textContent = '离线';
+                statusEl.classList.add('offline');
+                statusDot.classList.add('offline');
+                statusText.textContent = 'OFFLINE';
+            } else {
+                banner.classList.remove('show');
+                statusEl.textContent = '在线';
+                statusEl.classList.remove('offline');
+                statusDot.classList.remove('offline');
+                statusText.textContent = 'LIVE';
+            }
+        }
+
+        async function loadSummary() {
+            if (isOffline) return;
+            try {
+                const res = await fetch(API_BASE + '/api/summary');
+                const data = await res.json();
+                document.getElementById('totalNodes').textContent = data.total_nodes ?? '--';
+                document.getElementById('groupCount').textContent = data.groups?.length ?? '--';
+            } catch (e) {}
+        }
+
+        async function loadGroups() {
+            if (isOffline) {
+                document.getElementById('groupList').innerHTML = '<div class="empty">服务离线</div>';
+                return;
+            }
+            try {
+                const res = await fetch(API_BASE + '/api/groups');
+                const data = await res.json();
+                if (data.error) { checkServiceStatus(); return; }
+
+                cachedGroups = data;
+                const container = document.getElementById('groupList');
+                container.innerHTML = '';
+
+                for (const [groupName, group] of Object.entries(data)) {
+                    const item = document.createElement('div');
+                    item.className = 'group-item';
+
+                    const selectedTcp4 = group.selected['tcp4'] || group.selected['"tcp4"'] || Object.values(group.selected)[0];
+                    const latency = selectedTcp4?.latency || 0;
+                    const latencyClass = latency > 500 ? 'high' : latency > 200 ? 'slow' : '';
+                    const subtag = group.nodes?.[0]?.subtag || '';
+
+                    item.innerHTML = `
+                        <div class="group-name">${groupName} (${group.nodes?.length || 0})</div>
+                        <div class="group-detail">
+                            <span class="subtag-badge">${subtag}</span>
+                            ${selectedTcp4?.dialer || '-'}
+                            ${latency ? `<span class="group-latency ${latencyClass}">${latency}ms</span>` : ''}
+                        </div>
+                    `;
+                    container.appendChild(item);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadGroupsTable() {
+            if (isOffline) {
+                document.getElementById('groupsTable').innerHTML = '<tr><td colspan="6" class="empty">服务离线</td></tr>';
+                return;
+            }
+            try {
+                const res = await fetch(API_BASE + '/api/groups');
+                const data = await res.json();
+                if (data.error) { checkServiceStatus(); return; }
+
+                const tbody = document.getElementById('groupsTable');
+                tbody.innerHTML = '';
+
+                for (const [groupName, group] of Object.entries(data)) {
+                    const selectedTcp4 = group.selected['tcp4'] || group.selected['"tcp4"'];
+                    const latency = selectedTcp4?.latency || 0;
+                    const latencyClass = latency > 500 ? 'latency-bad' : latency > 200 ? 'latency-slow' : 'latency-good';
+                    const subtag = group.nodes?.[0]?.subtag || '-';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${groupName}</td>
+                        <td><span class="subtag-badge">${subtag}</span></td>
+                        <td>${selectedTcp4?.dialer || '-'}</td>
+                        <td><span class="${latencyClass}">${latency}ms</span></td>
+                        <td>${group.nodes?.length || 0}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadNodesTable() {
+            if (isOffline) {
+                document.getElementById('nodesTable').innerHTML = '<tr><td colspan="4" class="empty">服务离线</td></tr>';
+                return;
+            }
+            try {
+                const res = await fetch(API_BASE + '/api/nodes');
+                const data = await res.json();
+                if (data.error) { checkServiceStatus(); return; }
+
+                const tbody = document.getElementById('nodesTable');
+                tbody.innerHTML = '';
+
+                for (const [key, node] of Object.entries(data.nodes || {})) {
+                    const latency = node.latency || 0;
+                    const latencyClass = latency > 500 ? 'latency-bad' : latency > 200 ? 'latency-slow' : 'latency-good';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${node.name}</td>
+                        <td><span class="subtag-badge">${node.subtag}</span></td>
+                        <td><span class="${latencyClass}">${latency}ms</span></td>
+                        <td>${node.groups?.join(', ') || '-'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadConnections() {
+            if (isOffline) {
+                document.getElementById('connectionsTable').innerHTML = '<tr><td colspan="5" class="empty">服务离线</td></tr>';
+                return;
+            }
+            try {
+                const res = await fetch(API_BASE + '/api/connections');
+                const data = await res.json();
+                const tbody = document.getElementById('connectionsTable');
+                tbody.innerHTML = '';
+
+                for (const conn of data.connections || []) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${conn.src_ip}:${conn.src_port}</td>
+                        <td>${conn.dst_ip}:${conn.dst_port}</td>
+                        <td>${conn.dialer || '-'}</td>
+                        <td>${conn.outbound || '-'}</td>
+                        <td>${conn.network || '-'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadDNS() {
+            if (isOffline) {
+                document.getElementById('dnsTable').innerHTML = '<tr><td colspan="3" class="empty">服务离线</td></tr>';
+                return;
+            }
+            try {
+                const res = await fetch(API_BASE + '/api/dns');
+                const data = await res.json();
+                const tbody = document.getElementById('dnsTable');
+                tbody.innerHTML = '';
+
+                for (const query of data.queries || []) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${query.qname}</td>
+                        <td>${query.dialer}</td>
+                        <td>${query.network}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadLogs() {
+            try {
+                const res = await fetch(API_BASE + '/api/logs?limit=200');
+                const data = await res.json();
+                const container = document.getElementById('logViewer');
+                container.innerHTML = '';
+                for (const log of data.logs || []) {
+                    const entry = document.createElement('div');
+                    entry.className = 'log-entry';
+                    entry.innerHTML = `<span class="log-time">${log.time}</span><span class="log-level ${log.level}">${log.level}</span><span class="log-message">${log.message}</span>`;
+                    container.appendChild(entry);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(protocol + '//' + window.location.host + '/ws');
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.status) {
+                    isOffline = data.status.overall !== 'online';
+                    updateStatusUI(isOffline, data.status.age_seconds || 0);
+                }
+            };
+            ws.onclose = () => setTimeout(connectWebSocket, 3000);
+        }
+
+        checkServiceStatus();
+        loadSummary();
+        loadGroups();
+        connectWebSocket();
+        setInterval(() => { checkServiceStatus(); if (!isOffline) { loadSummary(); loadGroups(); } }, 5000);
+    </script>
+</body>
+</html>
