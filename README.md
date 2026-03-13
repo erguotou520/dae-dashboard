@@ -21,8 +21,6 @@ A web-based monitoring dashboard for [dae](https://github.com/daeuniverse/dae) -
 
 ## Installation
 
-### On the server (192.168.203.80)
-
 ```bash
 # Install dependencies
 pip3 install fastapi uvicorn --break-system-packages
