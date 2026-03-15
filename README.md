@@ -1,15 +1,17 @@
 # dae Dashboard
 
-A web-based monitoring dashboard for [dae](https://github.com/daeuniverse/dae) - a Linux eBPF-based proxy service.
+A web-based monitoring and control dashboard for [dae](https://github.com/daeuniverse/dae) - a Linux eBPF-based proxy service.
 
 ## Features
 
 - **Real-time monitoring**: Live updates via WebSocket
-- **Group status**: View proxy groups and their selected nodes
-- **Node information**: Detailed node list with subscription source (subtag)
+- **Systemd status**: ActiveState/SubState/MainPID with health summary
+- **Config editor**: View and edit `/usr/local/etc/dae/config.dae`
+- **Reload control**: Trigger `dae reload` from the UI
+- **Group status**: View proxy groups and their selected dialer
+- **Node information**: Nodes list with subscription source (subtag)
 - **Latency tracking**: Node latency in milliseconds
-- **Connection logs**: Traffic connection records
-- **DNS queries**: DNS resolution information
+- **Traffic insights**: DNS and traffic info parsed from logs
 - **Log viewer**: Raw log streaming from journalctl
 
 ## Requirements
@@ -17,7 +19,7 @@ A web-based monitoring dashboard for [dae](https://github.com/daeuniverse/dae) -
 - Python 3.8+
 - FastAPI
 - Uvicorn
-- dae running via systemd
+- dae running via systemd (logs from `journalctl -u dae`)
 
 ## Installation
 
@@ -31,6 +33,9 @@ mkdir -p /opt/dae-dashboard/templates
 # Copy files
 cp app.py /opt/dae-dashboard/
 cp templates/index.html /opt/dae-dashboard/templates/
+
+# Optional static directory (only needed if you add static assets)
+mkdir -p /opt/dae-dashboard/static
 
 # Create systemd service
 cat > /etc/systemd/system/dae-dashboard.service << EOF
@@ -65,8 +70,12 @@ Access the dashboard at http://your-server:8899/
 - `GET /api/status` - Service status
 - `GET /api/groups` - Group information with nodes
 - `GET /api/nodes` - All unique nodes
-- `GET /api/connections` - Connection logs
-- `GET /api/dns` - DNS query logs
+- `GET /api/connections` - Connection logs (best-effort parsing)
+- `GET /api/dns` - DNS query logs (best-effort parsing)
+- `GET /api/traffic` - Traffic summary from logs
+- `GET /api/config` - Read dae config
+- `PUT /api/config` - Update dae config
+- `POST /api/reload` - Reload dae config
 - `GET /api/logs` - Raw logs
 - `WS /ws` - WebSocket for real-time updates
 

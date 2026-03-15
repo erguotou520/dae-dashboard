@@ -3,51 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DAE Control Room</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>DAE Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.cn">
+    <link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin>
+    <link href="https://fonts.googleapis.cn/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: oklch(0.15 0 0);
-            --bg-secondary: oklch(0.18 0 0);
-            --bg-tertiary: oklch(0.22 0 0);
-            --text-primary: oklch(0.95 0.01 50);
-            --text-secondary: oklch(0.70 0.01 50);
-            --text-muted: oklch(0.50 0.01 50);
-            --accent-amber: oklch(0.65 0.15 70);
-            --accent-green: oklch(0.65 0.12 145);
-            --accent-red: oklch(0.60 0.18 25);
-            --accent-blue: oklch(0.60 0.12 240);
-            --border: oklch(0.25 0 0);
-            --border-subtle: oklch(0.20 0 0);
+            --bg-cream: #f5efe6;
+            --bg-sand: #efe4d4;
+            --bg-card: #fffaf2;
+            --text-ink: #1a1a1a;
+            --text-muted: #5b5246;
+            --text-faint: #8a8174;
+            --accent-coral: #e26d5c;
+            --accent-olive: #6b705c;
+            --accent-sky: #3a86ff;
+            --accent-teal: #2a9d8f;
+            --border: #e2d4c3;
+            --shadow: 0 10px 30px rgba(26, 26, 26, 0.08);
 
-            --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
+            --font-display: 'Space Grotesk', system-ui, sans-serif;
+            --font-mono: 'IBM Plex Mono', monospace;
 
             --space-xs: 0.25rem;
             --space-sm: 0.5rem;
             --space-md: 0.75rem;
             --space-lg: 1rem;
             --space-xl: 1.5rem;
+            --space-2xl: 2.25rem;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: var(--font-display);
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            background: radial-gradient(1200px 600px at 10% 0%, #fff6e8, var(--bg-cream));
+            color: var(--text-ink);
             height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
-        .offline-banner {
-            background: var(--accent-red);
-            color: var(--bg-primary);
-            padding: 6px var(--space-xl);
+        .top-banner {
+            background: var(--accent-coral);
+            color: #fff;
+            padding: 6px var(--space-2xl);
             font-size: 0.8rem;
             font-weight: 600;
             display: none;
@@ -57,110 +58,224 @@
             flex-shrink: 0;
         }
 
-        .offline-banner.show { display: flex; }
+        .top-banner.show { display: flex; }
 
         .header {
-            background: var(--bg-secondary);
-            padding: var(--space-md) var(--space-xl);
+            padding: var(--space-lg) var(--space-2xl);
             display: flex;
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid var(--border);
+            background: linear-gradient(90deg, #fffdf8 0%, #f8efe3 100%);
             flex-shrink: 0;
         }
 
-        .header-left { display: flex; align-items: baseline; gap: var(--space-md); }
-        .header-title { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; }
-        .header-subtitle { font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-mono); }
+        .header-left { display: flex; flex-direction: column; gap: 2px; }
+        .header-title { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
+        .header-subtitle { font-size: 0.75rem; color: var(--text-faint); font-family: var(--font-mono); }
 
         .header-right { display: flex; align-items: center; gap: var(--space-md); }
-        .status-indicator { display: flex; align-items: center; gap: 4px; font-size: 0.65rem; font-family: var(--font-mono); color: var(--text-secondary); }
-        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-green); animation: pulse 2s ease-in-out infinite; }
-        .status-dot.offline { background: var(--accent-red); animation: none; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .status-chip { font-size: 0.7rem; font-family: var(--font-mono); padding: 4px 8px; border-radius: 999px; font-weight: 600; }
+        .status-chip.online { background: rgba(42, 157, 143, 0.15); color: var(--accent-teal); }
+        .status-chip.degraded { background: rgba(226, 109, 92, 0.15); color: var(--accent-coral); }
+        .status-chip.offline { background: rgba(88, 24, 69, 0.12); color: #7a3e5a; }
 
-        .service-status { font-size: 0.65rem; font-family: var(--font-mono); padding: 2px 6px; border-radius: 2px; background: oklch(0.65 0.12 145 / 0.2); color: var(--accent-green); font-weight: 600; }
-        .service-status.offline { background: oklch(0.60 0.18 25 / 0.2); color: var(--accent-red); }
+        .status-meta { display: flex; flex-direction: column; gap: 4px; font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono); }
 
-        .content { display: grid; grid-template-columns: 320px 1fr; flex: 1; overflow: hidden; background: var(--border); gap: 1px; }
+        .content {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            flex: 1;
+            overflow: hidden;
+            gap: 1px;
+            background: var(--border);
+        }
 
-        .sidebar { background: var(--bg-secondary); padding: var(--space-md); overflow-y: auto; }
-        .section-title { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: var(--space-sm); padding-bottom: var(--space-xs); border-bottom: 1px solid var(--border-subtle); }
+        .sidebar {
+            background: var(--bg-sand);
+            padding: var(--space-lg);
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-faint);
+            margin-bottom: var(--space-sm);
+            padding-bottom: var(--space-xs);
+            border-bottom: 1px solid var(--border);
+        }
 
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-lg); }
-        .stat-box { background: var(--bg-tertiary); padding: var(--space-sm); border-radius: 3px; }
-        .stat-label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
-        .stat-value { font-size: 1.25rem; font-weight: 700; font-family: var(--font-mono); color: var(--accent-amber); }
-        .stat-value.stale { color: var(--text-muted); }
+        .stat-box { background: var(--bg-card); padding: var(--space-sm); border-radius: 10px; box-shadow: var(--shadow); }
+        .stat-label { font-size: 0.6rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+        .stat-value { font-size: 1.4rem; font-weight: 700; font-family: var(--font-mono); color: var(--accent-olive); }
+        .stat-value.stale { color: var(--text-faint); }
 
-        .group-list { display: flex; flex-direction: column; gap: var(--space-xs); }
-        .group-item { background: var(--bg-tertiary); padding: var(--space-sm); border-radius: 3px; border-left: 2px solid var(--border); }
-        .group-item.active { border-left-color: var(--accent-green); }
-        .group-name { font-size: 0.7rem; font-weight: 600; margin-bottom: 2px; }
-        .group-detail { font-size: 0.65rem; font-family: var(--font-mono); color: var(--text-secondary); display: flex; align-items: center; gap: var(--space-sm); }
-        .group-latency { color: var(--accent-green); }
-        .group-latency.slow { color: var(--accent-amber); }
-        .group-latency.high { color: var(--accent-red); }
+        .status-card {
+            background: var(--bg-card);
+            padding: var(--space-md);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-lg);
+        }
 
-        .main { background: var(--bg-primary); padding: var(--space-lg); overflow-y: auto; }
+        .status-row { display: flex; justify-content: space-between; font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); }
+        .status-row strong { color: var(--text-ink); }
 
-        .tabs { display: flex; gap: var(--space-xs); margin-bottom: var(--space-md); border-bottom: 1px solid var(--border); padding-bottom: var(--space-xs); flex-wrap: wrap; }
-        .tab { padding: var(--space-xs) var(--space-sm); font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); background: transparent; border: none; cursor: pointer; border-radius: 3px; transition: all 0.15s; white-space: nowrap; }
-        .tab:hover { color: var(--text-primary); background: var(--bg-tertiary); }
-        .tab.active { color: var(--text-primary); background: var(--bg-tertiary); }
+        .group-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+        .group-item {
+            background: var(--bg-card);
+            padding: var(--space-sm);
+            border-radius: 10px;
+            border: 1px solid transparent;
+            box-shadow: var(--shadow);
+        }
+        .group-item.active { border-color: rgba(42, 157, 143, 0.4); }
+        .group-name { font-size: 0.75rem; font-weight: 600; margin-bottom: 4px; }
+        .group-detail { font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; }
+        .latency-good { color: var(--accent-teal); }
+        .latency-slow { color: var(--accent-olive); }
+        .latency-bad { color: var(--accent-coral); }
+        .subtag-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 999px;
+            font-size: 0.6rem;
+            background: rgba(58, 134, 255, 0.12);
+            color: var(--accent-sky);
+        }
+
+        .main { background: var(--bg-cream); padding: var(--space-xl); overflow-y: auto; }
+
+        .tabs {
+            display: flex;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .tab:hover { color: var(--text-ink); border-color: var(--accent-olive); }
+        .tab.active { color: #fff; background: var(--accent-olive); border-color: var(--accent-olive); }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .table-container { background: var(--bg-secondary); border-radius: 3px; overflow: hidden; }
-        .table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-        .table thead { background: var(--bg-tertiary); }
-        .table th { padding: var(--space-xs) var(--space-sm); text-align: left; font-weight: 600; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-        .table td { padding: var(--space-xs) var(--space-sm); border-top: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.7rem; }
-        .table tr:hover { background: var(--bg-tertiary); }
+        .table-container {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .table thead { background: #f6ede0; }
+        .table th {
+            padding: var(--space-sm);
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-faint);
+        }
+        .table td { padding: var(--space-sm); border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.72rem; }
+        .table tr:hover { background: #f9f2e6; }
 
-        .subtag-badge { display: inline-block; padding: 1px 4px; border-radius: 2px; font-size: 0.6rem; background: oklch(0.60 0.12 240 / 0.2); color: var(--accent-blue); }
-        .latency-good { color: var(--accent-green); }
-        .latency-slow { color: var(--accent-amber); }
-        .latency-bad { color: var(--accent-red); }
+        .log-viewer {
+            background: #1d1d1d;
+            color: #f5f5f5;
+            border-radius: 12px;
+            padding: var(--space-md);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+        .log-entry { padding: 4px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; gap: var(--space-sm); }
+        .log-time { color: #bdbdbd; min-width: 120px; font-size: 0.65rem; }
+        .log-level { min-width: 60px; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; }
+        .log-level.info { color: #80b3ff; }
+        .log-level.warn { color: #ffb347; }
+        .log-level.error { color: #ff7676; }
+        .log-message { color: #f5f5f5; }
 
-        .log-viewer { background: var(--bg-secondary); border-radius: 3px; padding: var(--space-sm); font-family: var(--font-mono); font-size: 0.7rem; max-height: 450px; overflow-y: auto; }
-        .log-entry { padding: 2px 0; border-bottom: 1px solid var(--border-subtle); display: flex; gap: var(--space-sm); }
-        .log-time { color: var(--text-muted); min-width: 120px; font-size: 0.65rem; }
-        .log-level { min-width: 50px; font-size: 0.65rem; }
-        .log-level.info { color: var(--accent-blue); }
-        .log-level.warn { color: var(--accent-amber); }
-        .log-level.error { color: var(--accent-red); }
-        .log-message { color: var(--text-secondary); }
+        .editor-shell {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .editor-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-sm) var(--space-md);
+            border-bottom: 1px solid var(--border);
+            background: #f6ede0;
+        }
+        .editor-actions { display: flex; gap: var(--space-sm); align-items: center; }
+        .button {
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: #fff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .button.primary { background: var(--accent-olive); color: #fff; border-color: var(--accent-olive); }
+        .button.warn { background: var(--accent-coral); color: #fff; border-color: var(--accent-coral); }
+        .button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .editor-status { font-size: 0.7rem; color: var(--text-faint); font-family: var(--font-mono); }
 
-        .empty { text-align: center; padding: var(--space-lg); color: var(--text-muted); font-size: 0.75rem; }
+        .editor {
+            height: 540px;
+            font-family: var(--font-mono);
+        }
+
+        .empty { text-align: center; padding: var(--space-lg); color: var(--text-faint); font-size: 0.8rem; }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
-        ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--border); }
+        ::-webkit-scrollbar-track { background: var(--bg-sand); }
+        ::-webkit-scrollbar-thumb { background: #d4c3b4; border-radius: 999px; }
 
         @media (max-width: 1024px) {
             .content { grid-template-columns: 1fr; }
-            .sidebar { max-height: 40vh; border-bottom: 1px solid var(--border); }
+            .sidebar { max-height: 42vh; border-bottom: 1px solid var(--border); }
+            .editor { height: 360px; }
         }
     </style>
 </head>
 <body>
-    <div class="offline-banner" id="offlineBanner">
-        ⚠️ DAE 服务离线 - 日志数据未更新 (<span id="offlineAge">--</span>秒前)
+    <div class="top-banner" id="topBanner">
+        服务状态异常 - <span id="bannerText">日志未更新</span>
     </div>
 
     <header class="header">
         <div class="header-left">
-            <div class="header-title">DAE Control Room</div>
-            <div class="header-subtitle">192.168.203.80</div>
+            <div class="header-title">DAE Dashboard</div>
+            <div class="header-subtitle" id="hostSubtitle">--</div>
         </div>
         <div class="header-right">
-            <div class="service-status" id="serviceStatus">检查中...</div>
-            <div class="status-indicator">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusText">LIVE</span>
+            <div class="status-chip online" id="serviceStatus">检查中</div>
+            <div class="status-meta">
+                <div id="statusLine">systemd: --</div>
+                <div id="logLine">log age: --</div>
             </div>
         </div>
     </header>
@@ -179,6 +294,13 @@
                 </div>
             </div>
 
+            <div class="section-title">服务状态</div>
+            <div class="status-card">
+                <div class="status-row"><span>ActiveState</span><strong id="activeState">--</strong></div>
+                <div class="status-row"><span>SubState</span><strong id="subState">--</strong></div>
+                <div class="status-row"><span>MainPID</span><strong id="mainPid">--</strong></div>
+            </div>
+
             <div class="section-title">分组状态</div>
             <div class="group-list" id="groupList"></div>
         </aside>
@@ -187,8 +309,10 @@
             <div class="tabs">
                 <button class="tab active" data-tab="groups">分组节点</button>
                 <button class="tab" data-tab="all-nodes">所有节点</button>
+                <button class="tab" data-tab="traffic">流量解析</button>
                 <button class="tab" data-tab="connections">连接记录</button>
                 <button class="tab" data-tab="dns">DNS解析</button>
+                <button class="tab" data-tab="config">配置文件</button>
                 <button class="tab" data-tab="logs">日志</button>
             </div>
 
@@ -199,8 +323,9 @@
                             <tr>
                                 <th>分组</th>
                                 <th>订阅来源</th>
-                                <th>选中节点</th>
+                                <th>拨号器</th>
                                 <th>延迟</th>
+                                <th>网络</th>
                                 <th>节点数</th>
                             </tr>
                         </thead>
@@ -225,7 +350,36 @@
                 </div>
             </div>
 
+            <div class="tab-content" id="tab-traffic">
+                <div class="editor-toolbar" style="margin-bottom: 12px;">
+                    <div class="editor-status">按域名筛选</div>
+                    <div class="editor-actions">
+                        <input class="button" id="trafficSearch" placeholder="例如: google.com" style="min-width: 240px;" />
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>域名</th>
+                                <th>DNS</th>
+                                <th>分组</th>
+                                <th>拨号器</th>
+                                <th>网络</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trafficTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="tab-content" id="tab-connections">
+                <div class="editor-toolbar" style="margin-bottom: 12px;">
+                    <div class="editor-status">按域名筛选</div>
+                    <div class="editor-actions">
+                        <input class="button" id="connSearch" placeholder="例如: openai.com" style="min-width: 240px;" />
+                    </div>
+                </div>
                 <div class="table-container">
                     <table class="table">
                         <thead>
@@ -235,6 +389,7 @@
                                 <th>节点</th>
                                 <th>出口</th>
                                 <th>网络</th>
+                                <th>域名</th>
                             </tr>
                         </thead>
                         <tbody id="connectionsTable"></tbody>
@@ -243,6 +398,12 @@
             </div>
 
             <div class="tab-content" id="tab-dns">
+                <div class="editor-toolbar" style="margin-bottom: 12px;">
+                    <div class="editor-status">按域名筛选</div>
+                    <div class="editor-actions">
+                        <input class="button" id="dnsSearch" placeholder="例如: api.telegram.org" style="min-width: 240px;" />
+                    </div>
+                </div>
                 <div class="table-container">
                     <table class="table">
                         <thead>
@@ -257,18 +418,73 @@
                 </div>
             </div>
 
+            <div class="tab-content" id="tab-config">
+                <div class="editor-shell">
+                    <div class="editor-toolbar">
+                        <div class="editor-status" id="configStatus">加载中...</div>
+                        <div class="editor-actions">
+                            <button class="button warn" id="reloadBtn">重载配置</button>
+                            <button class="button primary" id="saveBtn">保存配置</button>
+                        </div>
+                    </div>
+                    <div class="editor" id="editor"></div>
+                    <textarea class="editor" id="configFallback" style="display:none; padding: 12px; border: none; outline: none; width: 100%;"></textarea>
+                </div>
+            </div>
+
             <div class="tab-content" id="tab-logs">
                 <div class="log-viewer" id="logViewer"></div>
             </div>
         </main>
     </div>
 
-    <script>
+    <script type="module">
+        let EditorState;
+        let EditorView;
+        let lineNumbers;
+        let highlightActiveLineGutter;
+        let history;
+        let historyKeymap;
+        let syntaxHighlighting;
+        let defaultHighlightStyle;
+        let indentOnInput;
+        let keymap;
+        let codeMirrorReady = false;
+
+        async function loadCodeMirror() {
+            try {
+                const state = await import("https://cdn.jsdelivr.net/npm/@codemirror/state@6.4.1/+esm");
+                const view = await import("https://cdn.jsdelivr.net/npm/@codemirror/view@6.23.0/+esm");
+                const commands = await import("https://cdn.jsdelivr.net/npm/@codemirror/commands@6.5.0/+esm");
+                const language = await import("https://cdn.jsdelivr.net/npm/@codemirror/language@6.10.0/+esm");
+                EditorState = state.EditorState;
+                EditorView = view.EditorView;
+                lineNumbers = view.lineNumbers;
+                highlightActiveLineGutter = view.highlightActiveLineGutter;
+                history = commands.history;
+                historyKeymap = commands.historyKeymap;
+                syntaxHighlighting = language.syntaxHighlighting;
+                defaultHighlightStyle = language.defaultHighlightStyle;
+                indentOnInput = language.indentOnInput;
+                keymap = view.keymap;
+                codeMirrorReady = true;
+            } catch (e) {
+                console.error('CodeMirror load failed', e);
+                codeMirrorReady = false;
+            }
+        }
+
         const API_BASE = '';
         let ws = null;
-        let isOffline = false;
+        let isStale = false;
         let cachedGroups = {};
-        let cachedNodes = {};
+        let editorView = null;
+        let trafficCache = [];
+        let connCache = [];
+        let dnsCache = [];
+        let activeTab = 'groups';
+
+        document.getElementById('hostSubtitle').textContent = window.location.host;
 
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -276,55 +492,65 @@
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                 tab.classList.add('active');
                 document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+                activeTab = tab.dataset.tab;
                 loadTabData(tab.dataset.tab);
             });
         });
 
         async function loadTabData(tab) {
-            if (isOffline) return;
             if (tab === 'groups') loadGroupsTable();
             if (tab === 'all-nodes') loadNodesTable();
+            if (tab === 'traffic') loadTraffic();
             if (tab === 'connections') loadConnections();
             if (tab === 'dns') loadDNS();
             if (tab === 'logs') loadLogs();
+            if (tab === 'config') loadConfig();
         }
 
         async function checkServiceStatus() {
             try {
                 const res = await fetch(API_BASE + '/api/status');
                 const data = await res.json();
-                isOffline = data.overall_status !== 'online';
-                updateStatusUI(isOffline, data.log_freshness?.age_seconds || 0);
+                isStale = !data.log_freshness?.is_fresh;
+                updateStatusUI(data);
             } catch (e) {
-                isOffline = true;
-                updateStatusUI(true, 999);
+                isStale = true;
+                updateStatusUI({overall_status: 'offline'});
             }
         }
 
-        function updateStatusUI(offline, logAge) {
-            const banner = document.getElementById('offlineBanner');
+        function updateStatusUI(data) {
+            const banner = document.getElementById('topBanner');
+            const bannerText = document.getElementById('bannerText');
             const statusEl = document.getElementById('serviceStatus');
-            const statusDot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusText');
+            const statusLine = document.getElementById('statusLine');
+            const logLine = document.getElementById('logLine');
 
-            if (offline) {
+            const overall = data.overall_status || 'offline';
+            statusEl.classList.remove('online', 'degraded', 'offline');
+            statusEl.classList.add(overall);
+            statusEl.textContent = overall === 'online' ? '在线' : overall === 'degraded' ? '异常' : '离线';
+
+            const systemd = data.systemd || {};
+            statusLine.textContent = `systemd: ${systemd.active_state || '--'} / ${systemd.sub_state || '--'}`;
+            logLine.textContent = `log age: ${data.log_freshness?.age_seconds ?? '--'}s (距最近日志)`;
+
+            document.getElementById('activeState').textContent = systemd.active_state || '--';
+            document.getElementById('subState').textContent = systemd.sub_state || '--';
+            document.getElementById('mainPid').textContent = systemd.main_pid || '--';
+
+            if (overall !== 'online') {
+                bannerText.textContent = overall === 'offline' ? '服务未运行' : '日志未更新';
                 banner.classList.add('show');
-                document.getElementById('offlineAge').textContent = logAge;
-                statusEl.textContent = '离线';
-                statusEl.classList.add('offline');
-                statusDot.classList.add('offline');
-                statusText.textContent = 'OFFLINE';
+            } else if (isStale) {
+                bannerText.textContent = '日志未更新';
+                banner.classList.add('show');
             } else {
                 banner.classList.remove('show');
-                statusEl.textContent = '在线';
-                statusEl.classList.remove('offline');
-                statusDot.classList.remove('offline');
-                statusText.textContent = 'LIVE';
             }
         }
 
         async function loadSummary() {
-            if (isOffline) return;
             try {
                 const res = await fetch(API_BASE + '/api/summary');
                 const data = await res.json();
@@ -334,14 +560,10 @@
         }
 
         async function loadGroups() {
-            if (isOffline) {
-                document.getElementById('groupList').innerHTML = '<div class="empty">服务离线</div>';
-                return;
-            }
             try {
                 const res = await fetch(API_BASE + '/api/groups');
                 const data = await res.json();
-                if (data.error) { checkServiceStatus(); return; }
+                if (data.error) { return; }
 
                 cachedGroups = data;
                 const container = document.getElementById('groupList');
@@ -351,17 +573,19 @@
                     const item = document.createElement('div');
                     item.className = 'group-item';
 
-                    const selectedTcp4 = group.selected['tcp4'] || group.selected['"tcp4"'] || Object.values(group.selected)[0];
-                    const latency = selectedTcp4?.latency || 0;
-                    const latencyClass = latency > 500 ? 'high' : latency > 200 ? 'slow' : '';
+                    const selected = group.selected && Object.values(group.selected)[0];
+                    const latency = selected?.latency || 0;
+                    const latencyClass = latency > 500 ? 'latency-bad' : latency > 200 ? 'latency-slow' : 'latency-good';
                     const subtag = group.nodes?.[0]?.subtag || '';
+                    const network = group.networks?.[0] || '-';
 
                     item.innerHTML = `
                         <div class="group-name">${groupName} (${group.nodes?.length || 0})</div>
                         <div class="group-detail">
-                            <span class="subtag-badge">${subtag}</span>
-                            ${selectedTcp4?.dialer || '-'}
-                            ${latency ? `<span class="group-latency ${latencyClass}">${latency}ms</span>` : ''}
+                            <span class="subtag-badge">${subtag || '-'}</span>
+                            <span>${selected?.dialer || '-'}</span>
+                            <span>${network}</span>
+                            ${latency ? `<span class="${latencyClass}">${latency}ms</span>` : ''}
                         </div>
                     `;
                     container.appendChild(item);
@@ -370,30 +594,28 @@
         }
 
         async function loadGroupsTable() {
-            if (isOffline) {
-                document.getElementById('groupsTable').innerHTML = '<tr><td colspan="6" class="empty">服务离线</td></tr>';
-                return;
-            }
             try {
                 const res = await fetch(API_BASE + '/api/groups');
                 const data = await res.json();
-                if (data.error) { checkServiceStatus(); return; }
+                if (data.error) { return; }
 
                 const tbody = document.getElementById('groupsTable');
                 tbody.innerHTML = '';
 
                 for (const [groupName, group] of Object.entries(data)) {
-                    const selectedTcp4 = group.selected['tcp4'] || group.selected['"tcp4"'];
-                    const latency = selectedTcp4?.latency || 0;
+                    const selected = group.selected && Object.values(group.selected)[0];
+                    const latency = selected?.latency || 0;
                     const latencyClass = latency > 500 ? 'latency-bad' : latency > 200 ? 'latency-slow' : 'latency-good';
                     const subtag = group.nodes?.[0]?.subtag || '-';
+                    const network = group.networks?.join(', ') || '-';
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${groupName}</td>
                         <td><span class="subtag-badge">${subtag}</span></td>
-                        <td>${selectedTcp4?.dialer || '-'}</td>
+                        <td>${selected?.dialer || '-'}</td>
                         <td><span class="${latencyClass}">${latency}ms</span></td>
+                        <td>${network}</td>
                         <td>${group.nodes?.length || 0}</td>
                     `;
                     tbody.appendChild(tr);
@@ -402,14 +624,10 @@
         }
 
         async function loadNodesTable() {
-            if (isOffline) {
-                document.getElementById('nodesTable').innerHTML = '<tr><td colspan="4" class="empty">服务离线</td></tr>';
-                return;
-            }
             try {
                 const res = await fetch(API_BASE + '/api/nodes');
                 const data = await res.json();
-                if (data.error) { checkServiceStatus(); return; }
+                if (data.error) { return; }
 
                 const tbody = document.getElementById('nodesTable');
                 tbody.innerHTML = '';
@@ -430,18 +648,43 @@
             } catch (e) { console.error(e); }
         }
 
-        async function loadConnections() {
-            if (isOffline) {
-                document.getElementById('connectionsTable').innerHTML = '<tr><td colspan="5" class="empty">服务离线</td></tr>';
-                return;
-            }
+        async function loadTraffic() {
             try {
-                const res = await fetch(API_BASE + '/api/connections');
+                const res = await fetch(API_BASE + '/api/traffic?limit=200');
                 const data = await res.json();
+                if (data.error) { return; }
+                trafficCache = data.records || [];
+                const tbody = document.getElementById('trafficTable');
+                tbody.innerHTML = '';
+
+                const query = (document.getElementById('trafficSearch').value || '').trim().toLowerCase();
+                const rows = query ? trafficCache.filter(r => (r.host || '').toLowerCase().includes(query)) : trafficCache;
+                for (const rec of rows) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${rec.host}</td>
+                        <td>${rec.dns}</td>
+                        <td>${rec.group}</td>
+                        <td>${rec.dialer}</td>
+                        <td>${rec.network}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadConnections() {
+            try {
+                const res = await fetch(API_BASE + '/api/connections?limit=200');
+                const data = await res.json();
+                if (data.error) { return; }
+                connCache = data.connections || [];
                 const tbody = document.getElementById('connectionsTable');
                 tbody.innerHTML = '';
 
-                for (const conn of data.connections || []) {
+                const query = (document.getElementById('connSearch').value || '').trim().toLowerCase();
+                const rows = query ? connCache.filter(r => (r.domain || '').toLowerCase().includes(query)) : connCache;
+                for (const conn of rows) {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${conn.src_ip}:${conn.src_port}</td>
@@ -449,6 +692,7 @@
                         <td>${conn.dialer || '-'}</td>
                         <td>${conn.outbound || '-'}</td>
                         <td>${conn.network || '-'}</td>
+                        <td>${conn.domain || '-'}</td>
                     `;
                     tbody.appendChild(tr);
                 }
@@ -456,17 +700,17 @@
         }
 
         async function loadDNS() {
-            if (isOffline) {
-                document.getElementById('dnsTable').innerHTML = '<tr><td colspan="3" class="empty">服务离线</td></tr>';
-                return;
-            }
             try {
-                const res = await fetch(API_BASE + '/api/dns');
+                const res = await fetch(API_BASE + '/api/dns?limit=200');
                 const data = await res.json();
+                if (data.error) { return; }
+                dnsCache = data.queries || [];
                 const tbody = document.getElementById('dnsTable');
                 tbody.innerHTML = '';
 
-                for (const query of data.queries || []) {
+                const q = (document.getElementById('dnsSearch').value || '').trim().toLowerCase();
+                const rows = q ? dnsCache.filter(r => (r.qname || '').toLowerCase().includes(q)) : dnsCache;
+                for (const query of rows) {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${query.qname}</td>
@@ -484,33 +728,155 @@
                 const data = await res.json();
                 const container = document.getElementById('logViewer');
                 container.innerHTML = '';
-                for (const log of data.logs || []) {
+                const logs = (data.logs || []).slice().reverse();
+                for (const log of logs) {
                     const entry = document.createElement('div');
                     entry.className = 'log-entry';
                     entry.innerHTML = `<span class="log-time">${log.time}</span><span class="log-level ${log.level}">${log.level}</span><span class="log-message">${log.message}</span>`;
                     container.appendChild(entry);
                 }
+                container.scrollTop = 0;
             } catch (e) { console.error(e); }
         }
+
+        function setupEditor(initialText) {
+            try {
+                if (!codeMirrorReady || !EditorView) {
+                    throw new Error('CodeMirror not ready');
+                }
+                const editorTheme = EditorView.theme({
+                    "&": { backgroundColor: "#fffaf2", color: "#1a1a1a", height: "100%" },
+                    ".cm-content": { fontFamily: "IBM Plex Mono, monospace", fontSize: "13px" },
+                    ".cm-gutters": { backgroundColor: "#f6ede0", color: "#8a8174", border: "none" },
+                    ".cm-activeLineGutter": { backgroundColor: "#efe4d4" },
+                    ".cm-activeLine": { backgroundColor: "#f9f2e6" },
+                }, { dark: false });
+
+                editorView = new EditorView({
+                    state: EditorState.create({
+                        doc: initialText || '',
+                        extensions: [
+                            lineNumbers(),
+                            highlightActiveLineGutter(),
+                            history(),
+                            indentOnInput(),
+                            keymap.of(historyKeymap),
+                            syntaxHighlighting(defaultHighlightStyle),
+                            editorTheme
+                        ]
+                    }),
+                    parent: document.getElementById('editor')
+                });
+                document.getElementById('configFallback').style.display = 'none';
+                document.getElementById('editor').style.display = 'block';
+            } catch (e) {
+                const editor = document.getElementById('editor');
+                const fallback = document.getElementById('configFallback');
+                editor.style.display = 'none';
+                fallback.style.display = 'block';
+                fallback.value = initialText || '';
+                editorView = null;
+            }
+        }
+
+        async function loadConfig() {
+            const status = document.getElementById('configStatus');
+            status.textContent = '加载中...';
+            try {
+                const res = await fetch(API_BASE + '/api/config');
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                const data = await res.json();
+                if (data.error) {
+                    status.textContent = `加载失败: ${data.error} (可设置环境变量 ${data.env_key || 'DAE_CONFIG_PATH'})`;
+                    return;
+                }
+                if (!('content' in data)) {
+                    status.textContent = `加载失败: 返回数据无 content (可设置环境变量 ${data.env_key || 'DAE_CONFIG_PATH'})`;
+                    return;
+                }
+                status.textContent = `${data.path}  |  ${Math.round(data.size / 1024)}KB`;
+                if (!editorView) {
+                    setupEditor(data.content || '');
+                } else {
+                    editorView.dispatch({
+                        changes: { from: 0, to: editorView.state.doc.length, insert: data.content || '' }
+                    });
+                }
+            } catch (e) {
+                console.error(e);
+                status.textContent = `加载失败: ${e.message || '未知错误'}`;
+            }
+        }
+
+        async function saveConfig() {
+            const status = document.getElementById('configStatus');
+            status.textContent = '保存中...';
+            try {
+                const content = editorView ? editorView.state.doc.toString() : document.getElementById('configFallback').value;
+                const res = await fetch(API_BASE + '/api/config', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                const data = await res.json();
+                status.textContent = data.ok ? '保存成功' : `保存失败: ${data.error || '未知错误'}`;
+            } catch (e) {
+                status.textContent = '保存失败';
+            }
+        }
+
+        async function reloadConfig() {
+            const status = document.getElementById('configStatus');
+            status.textContent = '重载中...';
+            try {
+                const res = await fetch(API_BASE + '/api/reload', { method: 'POST' });
+                const data = await res.json();
+                status.textContent = data.ok ? '重载完成' : `重载失败: ${data.stderr || '未知错误'}`;
+            } catch (e) {
+                status.textContent = '重载失败';
+            }
+        }
+
+        document.getElementById('saveBtn').addEventListener('click', saveConfig);
+        document.getElementById('reloadBtn').addEventListener('click', reloadConfig);
+        document.getElementById('trafficSearch').addEventListener('input', () => loadTraffic());
+        document.getElementById('connSearch').addEventListener('input', () => loadConnections());
+        document.getElementById('dnsSearch').addEventListener('input', () => loadDNS());
 
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(protocol + '//' + window.location.host + '/ws');
             ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                if (data.status) {
-                    isOffline = data.status.overall !== 'online';
-                    updateStatusUI(isOffline, data.status.age_seconds || 0);
-                }
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.status) {
+                        updateStatusUI({ overall_status: data.status.overall, log_freshness: { age_seconds: data.status.age_seconds }, systemd: data.status.systemd });
+                    }
+                } catch (e) {}
             };
             ws.onclose = () => setTimeout(connectWebSocket, 3000);
         }
 
+        await loadCodeMirror();
         checkServiceStatus();
         loadSummary();
         loadGroups();
+        loadGroupsTable();
         connectWebSocket();
-        setInterval(() => { checkServiceStatus(); if (!isOffline) { loadSummary(); loadGroups(); } }, 5000);
+        setInterval(() => {
+            checkServiceStatus();
+            loadSummary();
+            loadGroups();
+            if (activeTab === 'groups') loadGroupsTable();
+            if (activeTab === 'all-nodes') loadNodesTable();
+            if (activeTab === 'traffic') loadTraffic();
+            if (activeTab === 'connections') loadConnections();
+            if (activeTab === 'dns') loadDNS();
+            if (activeTab === 'logs') loadLogs();
+            if (activeTab === 'config') loadConfig();
+        }, 5000);
     </script>
 </body>
 </html>
