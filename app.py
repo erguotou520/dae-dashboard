@@ -539,8 +539,12 @@ async def save_config(payload: dict):
 
 @app.post("/api/reload")
 async def reload_config():
-    r = _run_cmd(['dae', 'reload'])
-    return r
+    try:
+        # Start the command in background without waiting
+        subprocess.Popen(['dae', 'reload'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return {'ok': True, 'stdout': '', 'stderr': ''}
+    except Exception as e:
+        return {'ok': False, 'code': -1, 'stdout': '', 'stderr': str(e)}
 
 
 @app.get("/api/logs")
