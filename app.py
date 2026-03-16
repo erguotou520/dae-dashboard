@@ -104,7 +104,8 @@ class JournalLogReader:
         if self.last_update is None:
             return {'is_fresh': False, 'age_seconds': 999999, 'status': 'not_found'}
         age = int(datetime.now().timestamp() - self.last_update.timestamp())
-        return {'is_fresh': age < 60, 'age_seconds': age, 'status': 'online' if age < 60 else 'offline'}
+        # Consider logs fresh if updated within 5 minutes
+        return {'is_fresh': age < 300, 'age_seconds': age, 'status': 'online' if age < 300 else 'offline'}
 
 
 log_reader = JournalLogReader()
@@ -429,6 +430,15 @@ def _systemd_status():
     }
 
 
+def _check_daemon_process():
+    """Check if dae process is running using pgrep"""
+    r = _run_cmd(['pgrep', '-f', 'dae run'], timeout=2)
+    if not r['ok']:
+        return False
+    # pgrep returns PIDs if found, empty if not
+    return bool(r['stdout'].strip())
+
+
 def _resolve_config_path():
     candidates = []
     env_path = os.environ.get(CONFIG_ENV_KEY)
@@ -453,11 +463,13 @@ def _resolve_config_path():
 async def status():
     f = parser.get_freshness()
     systemd = _systemd_status()
-    active = systemd.get('active_state') == 'active'
-    overall = 'online' if active and f['is_fresh'] else 'degraded' if active else 'offline'
+    # Check if dae process is actually running (more reliable than logs)
+    process_running = _check_daemon_process()
+    overall = 'online' if process_running else 'offline'
     return {
         'log_freshness': f,
         'systemd': systemd,
+        'process_running': process_running,
         'overall_status': overall
     }
 
